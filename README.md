@@ -2,7 +2,7 @@
 
 ### Installation
 1. Recommended Python version: `3.12`, to avoid possible compatibility issues with SDL2
-2. Clone using `git clone https://github.com/theMerovingian03/chip-8-interpreter/`
+2. Clone using `git clone https://github.com/theMerovingian03/chip-8-interpreter.git`
 3. `cd chip-8-interpreter`
 4. Create virtual env `py -3.12 -m venv myenv`
 5. Activate virtual env `myenv\Scripts\activate`
