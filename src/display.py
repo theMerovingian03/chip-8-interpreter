@@ -30,7 +30,7 @@ class Display:
     
     def render(self):
         """Render framebuffer to window"""
-            # Set background color (black)
+        # Set background color (black)
         self.renderer.color = (0, 0, 0)
         self.renderer.clear()
 
