@@ -1,7 +1,10 @@
 from typing import List, Any
-from memory import Memory
-from keyboard import Keyboard
-from display import Display
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from src.memory import Memory
+from src.keyboard import Keyboard
+from src.display import Display
 import random
 
 class CPU:
@@ -272,7 +275,7 @@ if __name__ == "__main__":
     display = Display()
     keyboard = Keyboard()
 
-    rom_path = r".\roms\Pong.ch8"
+    rom_path = r".\roms\space_invaders_david_winter.ch8"
     with open(rom_path, 'rb') as f:
         rom = f.read()
     memory.load_rom(rom)
