@@ -83,8 +83,10 @@ class CPU:
             self._display(X, Y, N)
         elif first == 0xE:
             self.handle_e_group(X, NN)
+        elif first == 0xF:
+            self.handle_f_group(X, NN)
         else:
-            print(f"Unknown OPCODE!: {opcode}")
+            print(f"Unknown OPCODE!: {opcode:04X}")
         
 
     # Handlers
@@ -168,8 +170,8 @@ class CPU:
             self.display.clear()
         # 00EE
         elif opcode == 0x00EE:
-            self.SP = -1
-            self.PC = self.stack[self.PC]
+            self.SP -= 1
+            self.PC = self.stack[self.SP]
 
     def handle_8_group(self, X: int, Y: int, N: int):
         # 8XY0
@@ -270,7 +272,7 @@ if __name__ == "__main__":
     display = Display()
     keyboard = Keyboard()
 
-    rom_path = r".\roms\ibm_logo.ch8"
+    rom_path = r".\roms\Pong.ch8"
     with open(rom_path, 'rb') as f:
         rom = f.read()
     memory.load_rom(rom)
