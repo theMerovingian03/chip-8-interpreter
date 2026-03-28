@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Any
 from memory import Memory
+from keyboard import Keyboard
 from display import Display
 import random
 
 class CPU:
-    def __init__(self, memory: Memory, display: Display):
+    def __init__(self, memory: Memory, display: Display, keyboard: Keyboard):
         self.V: List[int] = [0]*16      # General purpose registers
         self.I: int = 0                 # Index register
         self.stack: List[int] = [0]*16  # Call stack
@@ -14,8 +15,24 @@ class CPU:
         self.sound_timer: int = 0       # Sound timer
         self.memory = memory            # Memory
         self.display = display          # Display
+        self.keyboard = keyboard        # Keyboard
+
+        self.prev_keys: List[int] = [0] * 16 # To prevent debounce
+        self.waiting_for_key: bool = False
+        self.wait_register: Any = None
 
     def cycle(self):
+
+        if self.waiting_for_key:
+            for key in range(16):
+                if self.keyboard.is_pressed(key) and not self.prev_keys[key]:
+                    self.V[self.wait_register] = key
+                    self.waiting_for_key = False
+                    break
+
+            self.prev_keys = self.keyboard.keys.copy()
+            return
+        
         opcode = self.fetch()
         self.decode(opcode)
 
@@ -64,6 +81,8 @@ class CPU:
             self._random_to_vx_and_nn(X, NN)
         elif first == 0xD:
             self._display(X, Y, N)
+        elif first == 0xE:
+            self.handle_e_group(X, NN)
         else:
             print(f"Unknown OPCODE!: {opcode}")
         
@@ -183,29 +202,95 @@ class CPU:
         else:
             print(f"Unknown 8-group opcode: {N}")
 
+    def handle_e_group(self, X: int, NN: int):
+        key = self.V[X]
 
+        # 0xEX9E
+        if NN == 0x9E:
+            if self.keyboard.is_pressed(key):
+                self.PC += 2
+        # 0xEXA1
+        elif NN == 0xA1:
+            if not self.keyboard.is_pressed(key):
+                self.PC += 2
+
+    def handle_f_group(self, X: int, NN: int):
+
+        # 0xFX07
+        if NN == 0x07:
+            self.V[X] = self.delay_timer
+        
+        # 0xFX0A
+        elif NN == 0x0A:
+            self.wait_register = X
+            self.waiting_for_key = True
+
+        # 0xFX15
+        elif NN == 0x15:
+            self.delay_timer = self.V[X]
+        
+        # 0xFX18
+        elif NN == 0x18:
+            self.sound_timer = self.V[X]
+
+        # 0xFX1E
+        elif NN == 0x1E:
+            self.I = (self.I + self.V[X]) & 0xFFF
+
+        # 0xFX29
+        elif NN == 0x29:
+            self.I = 0x050 + ((self.V[X] & 0xF) * 5)
+
+        # 0xFX33
+        elif NN == 0x33:
+            # Get V[X]
+            num: int = self.V[X]
+            units: int = num % 10
+            tens: int = (num // 10) % 10
+            hundreds: int = num // 100
+
+            self.memory.write(self.I, hundreds)
+            self.memory.write(self.I + 1, tens)
+            self.memory.write(self.I + 2, units)
+
+        elif NN == 0x55:
+            for i in range(X + 1):
+                self.memory.write(self.I + i, self.V[i])
+
+        elif NN == 0x65:
+            for i in range(X + 1):
+                self.V[i] = self.memory.read(self.I + i)
+
+        else:
+            print(f"Unknown opcode: {NN:02X}")
 
 if __name__ == "__main__":
     import time
-    import sdl2
-    import sdl2.ext
     memory = Memory()
     display = Display()
+    keyboard = Keyboard()
 
     rom_path = r".\roms\ibm_logo.ch8"
     with open(rom_path, 'rb') as f:
         rom = f.read()
     memory.load_rom(rom)
-    cpu = CPU(memory=memory, display=display)
-
+    cpu = CPU(memory=memory, display=display, keyboard=keyboard)
+    last_timer = time.time()
     running = True
+
     while running:
         cpu.cycle()
 
-        # handle window events
-        for event in sdl2.ext.get_events():
-            if event.type == sdl2.SDL_QUIT:
-                running = False
+        now = time.time()
+
+        if now - last_timer >= 1/60:
+            if cpu.delay_timer > 0:
+                cpu.delay_timer -= 1
+            if cpu.sound_timer > 0:
+                cpu.sound_timer -= 1
+            last_timer = now
+
+        running = keyboard.handle_event()
 
         display.render()
 
