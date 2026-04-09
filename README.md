@@ -15,6 +15,9 @@ CHIP-8 was designed to be easy to program for and to use less memory than other 
 5. Activate virtual env `myenv\Scripts\activate`
 6. Run: `pip install -r requirements.txt`
 
+You can try and run other ROMs by simply placing them in the [roms](/roms/) folder.
+Follow the below steps to run your ROMs.
+
 ---
 
 ### How do I run it?
@@ -39,5 +42,5 @@ Simply run the `main.py` file in the `chip-8-interpreter` directory. It'll show 
 ---
 
 ### Sources
-* Tobias V.I Langhoff's blog (https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
-* Wikipedia (https://en.wikipedia.org/wiki/CHIP-8)
+* [Tobias V.I Langhoff's blog](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
+* [Wikipedia](https://en.wikipedia.org/wiki/CHIP-8)
